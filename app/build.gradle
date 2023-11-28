@@ -1,22 +1,38 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    alias(libs.plugins.android.application.gradle)
+    alias(libs.plugins.kotlin.gradle)
+    alias(libs.plugins.klint)
+    alias(libs.plugins.detekt)
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
+    alias(libs.plugins.ksp)
+}
+
+// Properties 객체 생성
+File localProperties = project.rootProject.file('local.properties')
+Properties properties = new Properties()
+if (localProperties.exists()) {
+    properties.load(localProperties.newDataInputStream())
 }
 
 android {
     namespace 'com.wedge.drawingtoyou'
-    compileSdk 33
+    compileSdk libs.versions.compileSdk.get().toInteger()
 
     defaultConfig {
         applicationId "com.wedge.drawingtoyou"
-        minSdk 26
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        minSdk libs.versions.minSdk.get().toInteger()
+        targetSdk libs.versions.targetSdk.get().toInteger()
+        versionCode libs.versions.versionCode.get().toInteger()
+        versionName libs.versions.versionName.get()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
+        }
+
+        if (localProperties.exists()) {
+
         }
     }
 
@@ -27,40 +43,47 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = libs.versions.jvmTarget.get()
     }
     buildFeatures {
+        buildConfig true
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.3'
+        kotlinCompilerExtensionVersion libs.versions.kotlinCompilerExtensionVersion.get()
     }
-    packaging {
+    packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
+    }
+    detekt {
+        buildUponDefaultConfig = true
+        allRules = false
+        config = files("$rootDir/detekt-config.yml")
     }
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-    implementation 'androidx.activity:activity-compose:1.8.0'
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation 'androidx.compose.ui:ui'
-    implementation 'androidx.compose.ui:ui-graphics'
-    implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.material3:material3'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
-    debugImplementation 'androidx.compose.ui:ui-tooling'
-    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    implementation(libs.bundles.android.library)
+    implementation(libs.bundles.compose.library)
+
+    implementation(libs.bundles.hilt.android)
+    kapt(libs.bundles.hilt.compiler)
+
+    implementation(libs.bundles.network)
+    implementation(libs.bundles.json.parser)
+
+    implementation(libs.bundles.imageloader)
+    ksp(libs.glide.compiler)
+
+    testImplementation(libs.bundles.test)
+    androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.bundles.android.compose.test)
+    debugImplementation(libs.bundles.compose.debug)
 }
